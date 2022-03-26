@@ -37,17 +37,33 @@ const ListenInput: React.FC<{
     // @ts-ignore
     const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition || window.mozSpeechRecognition || window.msSpeechRecognition)();
     recognition.lang = 'nb-NO';
+    recognition.interimResults = false;
 
     // This runs when the speech recognition service starts
     recognition.onstart = function() {
       console.log("We are listening. Try speaking into the microphone.");
     };
+    // This runs when the speech recognition service starts
+    recognition.onerror = function(event: any) {
+      console.log('Failed to capture speech');
+      console.log(event);
+    };
 
+    recognition.onspeechstart = (event: any) => {
+      console.log('Started recognizing speech');
+      console.log(event);
+    }
     recognition.onspeechend = function() {
+      console.log('Stopped recognizing speech');
       // when user is done speaking
       recognition.stop();
       setHasTriggered(false);
-    }
+    };
+
+    recognition.onsoundend = (event: any) => {
+      console.log('End of sound');
+      console.log(event);
+    };
 
     // This runs when the speech recognition service returns result
     recognition.onresult = function(event: any) {
@@ -59,13 +75,31 @@ const ListenInput: React.FC<{
 
       onResults({ transcript, confidence });
     };
+    recognition.onnomatch = (event: any) => {
+      console.log('Failed to match on any word');
+      console.log(event);
+    }
+
     recognition.start();
   }, [hasTriggered]);
+
 
   return <>
     {hasTriggered && <p>👂</p>}
     <button onClick={() => setHasTriggered(true)} disabled={hasTriggered}>🎤</button>
   </>;
+};
+
+const parseRecognizedSpeechToTime = (transcript: string) => {
+  if (transcript.includes(':') && transcript.length === 5) {
+    return transcript;
+  }
+
+  if (transcript.length === 4) {
+    return `${transcript.substring(0, 2)}:${transcript.substring(2, 4)}`;
+  }
+
+  return '';
 };
 
 function App() {
@@ -83,7 +117,7 @@ function App() {
             <div className="p-2 text-xl">
               <ListenInput onResults={({ transcript, confidence }) => {
                 console.log({ transcript, confidence });
-                setStart(transcript)
+                setStart(parseRecognizedSpeechToTime(transcript))
               }}/>
               <label htmlFor="id-start" className="font-bold">Start</label>
               <input
@@ -96,11 +130,12 @@ function App() {
                 onChange={(event) => setStart(event.target.value)}
                 value={start}
               />
+              <small className="block text-[10px]">{start}</small>
             </div>
             <div className="p-2 text-xl">
               <ListenInput onResults={({ transcript, confidence }) => {
                 console.log({ transcript, confidence });
-                setEnd(transcript)
+                setEnd(parseRecognizedSpeechToTime(transcript))
               }}/>
               <label htmlFor="id-end" className="font-bold">Slutt</label>
               <input
@@ -113,6 +148,7 @@ function App() {
                 onChange={(event) => setEnd(event.target.value)}
                 value={end}
               />
+              <small className="block text-[10px]">{end}</small>
             </div>
           </div>
 
