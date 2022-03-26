@@ -43,16 +43,19 @@ const ListenInput: React.FC<{
     recognition.onstart = function() {
       console.log("We are listening. Try speaking into the microphone.");
     };
-    // This runs when the speech recognition service starts
+    // On any that may have occurred
     recognition.onerror = function(event: any) {
-      console.log('Failed to capture speech');
+      console.error('Failed to capture speech');
       console.log(event);
     };
 
+    // Start of any speech the parser recognized as voice
     recognition.onspeechstart = (event: any) => {
       console.log('Started recognizing speech');
       console.log(event);
     }
+
+    // End of any speech the parser recognized as voice
     recognition.onspeechend = function() {
       console.log('Stopped recognizing speech');
       // when user is done speaking
@@ -60,6 +63,7 @@ const ListenInput: React.FC<{
       setHasTriggered(false);
     };
 
+    // End of any sound discovered
     recognition.onsoundend = (event: any) => {
       console.log('End of sound');
       console.log(event);
@@ -67,14 +71,15 @@ const ListenInput: React.FC<{
 
     // This runs when the speech recognition service returns result
     recognition.onresult = function(event: any) {
-      var transcript = event.results[0][0].transcript;
-      var confidence = event.results[0][0].confidence;
+      const transcript = event.results[0][0].transcript;
+      const confidence = event.results[0][0].confidence;
 
       console.log(transcript)
       console.log(confidence);
 
       onResults({ transcript, confidence });
     };
+    // Called if no match are found
     recognition.onnomatch = (event: any) => {
       console.log('Failed to match on any word');
       console.log(event);
