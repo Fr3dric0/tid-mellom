@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { differenceInMinutes } from 'date-fns';
 
 const timeAsDate = (time: string): Date => {
@@ -26,6 +26,48 @@ const TimeDifference: React.FC<{ start: string, end: string }> = ({ start, end }
   </div>;
 };
 
+const ListenInput: React.FC<{
+  onResults: (results: { transcript: string; confidence: number }) => void
+}> = ({ onResults }) => {
+  const [hasTriggered, setHasTriggered] = useState(false);
+  useEffect(() => {
+    if (!hasTriggered) {
+      return;
+    }
+    // @ts-ignore
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition || window.mozSpeechRecognition || window.msSpeechRecognition)();
+    recognition.lang = 'nb-NO';
+
+    // This runs when the speech recognition service starts
+    recognition.onstart = function() {
+      console.log("We are listening. Try speaking into the microphone.");
+    };
+
+    recognition.onspeechend = function() {
+      // when user is done speaking
+      recognition.stop();
+      setHasTriggered(false);
+    }
+
+    // This runs when the speech recognition service returns result
+    recognition.onresult = function(event: any) {
+      var transcript = event.results[0][0].transcript;
+      var confidence = event.results[0][0].confidence;
+
+      console.log(transcript)
+      console.log(confidence);
+
+      onResults({ transcript, confidence });
+    };
+    recognition.start();
+  }, [hasTriggered]);
+
+  return <>
+    {hasTriggered && <p>👂</p>}
+    <button onClick={() => setHasTriggered(true)} disabled={hasTriggered}>🎤</button>
+  </>;
+};
+
 function App() {
   const [start, setStart] = useState('');
   const [end, setEnd] = useState('');
@@ -39,6 +81,10 @@ function App() {
         <div className="flex justify-center items-center">
           <div>
             <div className="p-2 text-xl">
+              <ListenInput onResults={({ transcript, confidence }) => {
+                console.log({ transcript, confidence });
+                setStart(transcript)
+              }}/>
               <label htmlFor="id-start" className="font-bold">Start</label>
               <input
                 id="id-start"
@@ -52,6 +98,10 @@ function App() {
               />
             </div>
             <div className="p-2 text-xl">
+              <ListenInput onResults={({ transcript, confidence }) => {
+                console.log({ transcript, confidence });
+                setEnd(transcript)
+              }}/>
               <label htmlFor="id-end" className="font-bold">Slutt</label>
               <input
                 id="id-end"
