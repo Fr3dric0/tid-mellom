@@ -27,16 +27,15 @@ const TimeDifference: React.FC<{ start: string, end: string }> = ({ start, end }
 };
 
 function App() {
-
   const [start, setStart] = useState('');
   const [end, setEnd] = useState('');
 
   return (
-    <div>
+    <div className="flex items-center justify-center flex-col h-[100vh]">
       <header>
         <h1 className="m-5 text-4xl mx-auto block text-center font-bold">Tid mellom</h1>
       </header>
-      <main>
+      <main className="p-4 px-5 mx-auto max-w-xl">
         <div className="flex justify-center items-center">
           <div>
             <div className="p-2 text-xl">
